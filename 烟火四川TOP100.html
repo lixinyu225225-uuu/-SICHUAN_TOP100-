@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>烟火四川TOP100餐厅地图</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+QingKe+HuangYou&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'ZCOOL XiaoWei', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f3e9;
+            color: #5a3921;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 15px 0 20px;
+            position: relative;
+            border-bottom: 3px dashed #e6b17e;
+            margin-bottom: 15px;
+        }
+        
+        .title-main {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 42px;
+            color: #c72c2c;
+            text-shadow: 3px 3px 0px #f8e4b7;
+            letter-spacing: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .title-sub {
+            font-family: 'ZCOOL QingKe HuangYou', cursive;
+            font-size: 20px;
+            color: #8a5a2d;
+            margin-bottom: 10px;
+        }
+        
+        .title-decoration {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .decoration-line {
+            height: 3px;
+            width: 100px;
+            background: linear-gradient(90deg, transparent, #e6b17e, transparent);
+        }
+        
+        .decoration-icon {
+            font-size: 24px;
+            color: #c72c2c;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            height: 78vh;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        
+        .map-section {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(90, 57, 33, 0.15);
+            height: 100%;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background-color: rgba(255, 251, 242, 0.95);
+            border-radius: 12px;
+            padding: 15px;
+            width: 260px;
+            box-shadow: 0 5px 15px rgba(90, 57, 33, 0.2);
+            border: 2px solid #e6b17e;
+        }
+        
+        .overlay-title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 22px;
+            color: #c72c2c;
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 2px dashed #e6b17e;
+            padding-bottom: 8px;
+        }
+        
+        .restaurant-counter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .counter-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .counter-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #c72c2c;
+            line-height: 1;
+        }
+        
+        .counter-label {
+            font-size: 13px;
+            color: #8a5a2d;
+        }
+        
+        .restaurant-count {
+            font-size: 16px;
+            text-align: center;
+            margin: 12px 0;
+            color: #5a3921;
+        }
+        
+        .city-filter {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .city-btn {
+            padding: 6px 12px;
+            background-color: #f8e4b7;
+            border: 2px solid #e6b17e;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'ZCOOL XiaoWei', sans-serif;
+            font-size: 14px;
+        }
+        
+        .city-btn:hover, .city-btn.active {
+            background-color: #c72c2c;
+            color: white;
+            border-color: #c72c2c;
+        }
+        
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .legend-color.top10 {
+            background-color: #c72c2c;
+        }
+        
+        .legend-color.top50 {
+            background-color: #e6b17e;
+        }
+        
+        .legend-color.other {
+            background-color: #8a5a2d;
+        }
+        
+        .restaurant-display {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            max-height: 100%;
+            padding-right: 5px;
+        }
+        
+        .restaurant-display::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .restaurant-display::-webkit-scrollbar-track {
+            background: #f8e4b7;
+            border-radius: 10px;
+        }
+        
+        .restaurant-display::-webkit-scrollbar-thumb {
+            background: #c72c2c;
+            border-radius: 10px;
+        }
+        
+        .display-section {
+            background-color: #fffbf2;
+            border-radius: 15px;
+            padding: 18px;
+            box-shadow: 0 5px 15px rgba(90, 57, 33, 0.1);
+            border: 2px solid #e6b17e;
+        }
+        
+        .section-title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 22px;
+            color: #c72c2c;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px dashed #e6b17e;
+            padding-bottom: 8px;
+        }
+        
+        .section-title i {
+            font-size: 20px;
+        }
+        
+        .top-restaurants {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .restaurant-card {
+            background: linear-gradient(145deg, #fffbf2, #f8e4b7);
+            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid #e6b17e;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .restaurant-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(199, 44, 44, 0.2);
+        }
+        
+        .restaurant-card.highlight {
+            background: linear-gradient(145deg, #ffeaea, #ffc9c9);
+            border-color: #c72c2c;
+        }
+        
+        .card-rank {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background-color: #c72c2c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(199, 44, 44, 0.3);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            color: #5a3921;
+            margin-bottom: 8px;
+            font-weight: bold;
+            line-height: 1.3;
+            padding-right: 40px;
+        }
+        
+        .card-city {
+            display: inline-block;
+            background-color: #e6b17e;
+            color: #5a3921;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .card-city.chengdu {
+            background-color: #c72c2c;
+            color: white;
+        }
+        
+        .card-category {
+            font-size: 13px;
+            color: #8a5a2d;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .food-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .category-tag {
+            background-color: #f8e4b7;
+            color: #8a5a2d;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            border: 1px solid #e6b17e;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-tag:hover, .category-tag.active {
+            background-color: #c72c2c;
+            color: #fff;
+        }
+        
+        .restaurant-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .restaurant-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .restaurant-scroll::-webkit-scrollbar-track {
+            background: #f8e4b7;
+            border-radius: 10px;
+        }
+        
+        .restaurant-scroll::-webkit-scrollbar-thumb {
+            background: #c72c2c;
+            border-radius: 10px;
+        }
+        
+        .restaurant-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #fffbf2;
+            border-radius: 10px;
+            border-left: 4px solid #e6b17e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .restaurant-item:hover {
+            background-color: #f8e4b7;
+            transform: translateX(3px);
+        }
+        
+        .item-rank {
+            min-width: 28px;
+            height: 28px;
+            background-color: #c72c2c;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .item-details {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .item-name {
+            font-size: 15px;
+            color: #5a3921;
+            margin-bottom: 3px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .item-city {
+            font-size: 12px;
+            color: #8a5a2d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 15px;
+            border-top: 3px dashed #e6b17e;
+            color: #8a5a2d;
+            font-size: 14px;
+        }
+        
+        .spicy-icon {
+            color: #c72c2c;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .marker-icon {
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-family: 'ZCOOL XiaoWei', sans-serif;
+        }
+        
+        .marker-icon.top10 {
+            background-color: #c72c2c;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+        
+        .marker-icon.top50 {
+            background-color: #e6b17e;
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+        
+        .marker-icon.other {
+            background-color: #8a5a2d;
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+        }
+        
+        .floating-card {
+            position: absolute;
+            background-color: rgba(255, 251, 242, 0.98);
+            border-radius: 12px;
+            padding: 15px;
+            width: 280px;
+            box-shadow: 0 8px 25px rgba(90, 57, 33, 0.3);
+            border: 3px solid #c72c2c;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .floating-card.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .close-card {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #c72c2c;
+            cursor: pointer;
+        }
+        
+        .card-details p {
+            margin: 6px 0;
+            font-size: 14px;
+            color: #5a3921;
+        }
+        
+        .card-details strong {
+            color: #8a5a2d;
+        }
+        
+        #card-title {
+            font-size: 18px;
+            color: #c72c2c;
+            margin-bottom: 10px;
+            font-weight: bold;
+            padding-right: 30px;
+        }
+        
+        .floating-card .card-rank {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
+            
+            .title-main {
+                font-size: 32px;
+            }
+            
+            .title-sub {
+                font-size: 16px;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                height: auto;
+            }
+            
+            .map-section {
+                height: 500px;
+            }
+            
+            .map-overlay {
+                width: 240px;
+                padding: 12px;
+            }
+            
+            .restaurant-scroll {
+                max-height: 300px;
+            }
+        }
+        
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+        
+        .list-header span {
+            font-size: 14px;
+            color: #8a5a2d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title-main">烟火四川 TOP100 餐厅地图</h1>
+            <div class="title-sub">发现四川美食的终极指南</div>
+            <div class="title-decoration">
+                <div class="decoration-line"></div>
+                <div class="decoration-icon"><i class="fas fa-pepper-hot"></i></div>
+                <div class="decoration-line"></div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="map-section">
+                <div id="map"></div>
+                
+                <div class="map-overlay">
+                    <div class="overlay-title">美食地图概览</div>
+                    <div class="restaurant-counter">
+                        <div class="counter-item">
+                            <div class="counter-value" id="total-count">100</div>
+                            <div class="counter-label">总餐厅数</div>
+                        </div>
+                        <div class="counter-item">
+                            <div class="counter-value" id="chengdu-count">0</div>
+                            <div class="counter-label">成都餐厅</div>
+                        </div>
+                        <div class="counter-item">
+                            <div class="counter-value" id="other-count">0</div>
+                            <div class="counter-label">其他城市</div>
+                        </div>
+                    </div>
+                    
+                    <div class="restaurant-count">当前显示: <span id="showing-count">100</span> 家餐厅</div>
+                    
+                    <div class="city-filter">
+                        <div class="city-btn active" data-city="all">全部餐厅</div>
+                        <div class="city-btn" data-city="成都">仅成都</div>
+                        <div class="city-btn" data-city="其他">其他城市</div>
+                    </div>
+                    
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <div class="legend-color top10"></div>
+                            <span>TOP 1-10</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color top50"></div>
+                            <span>TOP 11-50</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color other"></div>
+                            <span>TOP 51-100</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="floating-card" class="floating-card">
+                    <button class="close-card">&times;</button>
+                    <h3 id="card-title"></h3>
+                    <div id="card-rank" class="card-rank"></div>
+                    <div class="card-details">
+                        <p><strong>城市:</strong> <span id="card-city"></span></p>
+                        <p><strong>菜系:</strong> <span id="card-category"></span></p>
+                        <p><strong>坐标:</strong> <span id="card-coords"></span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="restaurant-display">
+                <div class="display-section">
+                    <div class="section-title">
+                        <i class="fas fa-crown spicy-icon"></i>
+                        TOP 10 金牌餐厅
+                    </div>
+                    <div class="top-restaurants" id="top10-container">
+                        <!-- TOP10餐厅卡片将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="display-section">
+                    <div class="section-title">
+                        <i class="fas fa-filter"></i>
+                        分类筛选
+                    </div>
+                    <div class="food-categories" id="categories-container">
+                        <!-- 分类标签将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="section-title" style="font-size: 18px; margin-top: 15px;">
+                        <i class="fas fa-list"></i>
+                        餐厅列表
+                        <span style="font-size: 14px; margin-left: auto; color: #8a5a2d;">共100家</span>
+                    </div>
+                    <div class="restaurant-scroll" id="restaurant-list">
+                        <!-- 餐厅列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>数据来源：《烟火四川TOP100》餐厅评选 | 地图数据：阿里云DataV</p>
+        </div>
+    </div>
+
+    <script>
+        // 餐厅数据
+        const restaurantData = [
+            {rank: 1, name: "陶德砂锅（春熙路老店）", lng: 104.079482, lat: 30.657296, city: "成都", category: "砂锅/川菜"},
+            {rank: 2, name: "烤匠麻辣烤鱼（春熙路店）", lng: 104.079385, lat: 30.652455, city: "成都", category: "烤鱼"},
+            {rank: 3, name: "叶婆婆乐山老店", lng: 103.76816, lat: 29.553468, city: "乐山", category: "乐山小吃"},
+            {rank: 4, name: "翠孃孃老火锅（春熙路老店）", lng: 104.078075, lat: 30.661312, city: "成都", category: "火锅"},
+            {rank: 5, name: "五里关火锅（奎星楼店）", lng: 104.055896, lat: 30.667604, city: "成都", category: "火锅"},
+            {rank: 6, name: "川西坝子（金沙1.0直营店）", lng: 104.012314, lat: 30.686623, city: "成都", category: "火锅"},
+            {rank: 7, name: "永乐饭店（没有分店）", lng: 104.043627, lat: 30.630838, city: "成都", category: "川菜"},
+            {rank: 8, name: "西月城谭豆花（春熙路店）", lng: 104.076475, lat: 30.659703, city: "成都", category: "小吃/豆花"},
+            {rank: 9, name: "徐凉糕", lng: 103.663541, lat: 29.586843, city: "乐山", category: "乐山小吃/甜品"},
+            {rank: 10, name: "上宴精品海鲜姿造（晶融汇店）", lng: 104.082603, lat: 30.650798, city: "成都", category: "海鲜"},
+            {rank: 11, name: "御苑精品川菜馆", lng: 104.097946, lat: 30.626939, city: "成都", category: "川菜"},
+            {rank: 12, name: "牛满堂土菜馆跷脚牛肉（峨眉店）", lng: 103.458077, lat: 29.570254, city: "峨眉山", category: "牛肉/跷脚牛肉"},
+            {rank: 13, name: "乐山鲜知味钵钵鸡", lng: 104.029405, lat: 30.666445, city: "成都", category: "乐山小吃/钵钵鸡"},
+            {rank: 14, name: "蓉城小馆（人民公园店）", lng: 104.05883, lat: 30.65435, city: "成都", category: "川菜"},
+            {rank: 15, name: "老格篼土菜馆.川菜峨眉山店", lng: 103.457789, lat: 29.570035, city: "峨眉山", category: "川菜"},
+            {rank: 16, name: "罗二火锅（小关庙店）", lng: 104.086588, lat: 30.667958, city: "成都", category: "火锅"},
+            {rank: 17, name: "冯四孃跷脚牛肉 •非物质文化遗产传承店（总店）", lng: 103.74403, lat: 29.592684, city: "乐山", category: "牛肉/跷脚牛肉"},
+            {rank: 18, name: "乔一乔怪味餐厅（东升店）", lng: 103.906674, lat: 30.573293, city: "成都", category: "川菜"},
+            {rank: 19, name: "天星正源火锅（地勘路店）", lng: 104.121513, lat: 30.680821, city: "成都", category: "火锅"},
+            {rank: 20, name: "醉西昌自助烤肉（永兴街店）", lng: 104.394327, lat: 31.146876, city: "德阳", category: "烧烤"},
+            {rank: 21, name: "大彤集老火锅", lng: 104.053252, lat: 30.72082, city: "成都", category: "火锅"},
+            {rank: 22, name: "汉巴味德（成都印象城店）", lng: 104.107334, lat: 30.674111, city: "成都", category: "自助餐"},
+            {rank: 23, name: "老号李小肠特色烧烤园总店", lng: 102.263873, lat: 27.865706, city: "凉山", category: "烧烤"},
+            {rank: 24, name: "堂口原味老火锅（中粮鸿云总店）", lng: 104.11592, lat: 30.640052, city: "成都", category: "火锅"},
+            {rank: 25, name: "Tavie塔未", lng: 103.988651, lat: 30.67216, city: "成都", category: "西餐/融合菜"},
+            {rank: 26, name: "饕林餐厅（春熙路店）", lng: 104.073426, lat: 30.652661, city: "成都", category: "川菜"},
+            {rank: 27, name: "龙户人家串串香（龙福苑店）", lng: 104.01773, lat: 30.643317, city: "成都", category: "串串香"},
+            {rank: 28, name: "陈麻婆豆腐（旗舰店）", lng: 104.03418, lat: 30.662743, city: "成都", category: "川菜"},
+            {rank: 29, name: "食神厕所兔（自贡名店）", lng: 104.770522, lat: 29.358506, city: "自贡", category: "兔肉/自贡菜"},
+            {rank: 30, name: "蜀山小玲黄鸡肉钵钵鸡", lng: 103.76888, lat: 29.555182, city: "乐山", category: "乐山小吃/钵钵鸡"},
+            {rank: 31, name: "嘉州海汇源老烧麦店", lng: 103.7669, lat: 29.553966, city: "乐山", category: "乐山小吃/烧麦"},
+            {rank: 32, name: "鸡毛店（人民公园店）", lng: 104.060393, lat: 30.65915, city: "成都", category: "川菜"},
+            {rank: 33, name: "观锦餐厅（天府新谷店）", lng: 104.054739, lat: 30.587564, city: "成都", category: "川菜"},
+            {rank: 34, name: "熙蜀印象（天佑路店）", lng: 104.097185, lat: 30.768287, city: "成都", category: "川菜"},
+            {rank: 35, name: "红杏酒家（中坝店）", lng: 103.963238, lat: 30.674335, city: "成都", category: "川菜"},
+            {rank: 36, name: "小豆海棠", lng: 103.763188, lat: 29.559287, city: "乐山", category: "乐山小吃/甜品"},
+            {rank: 37, name: "品味农家铜锅馆", lng: 103.850582, lat: 31.686003, city: "阿坝", category: "火锅"},
+            {rank: 38, name: "五世方跷脚牛肉老汤火锅", lng: 103.665497, lat: 29.587257, city: "乐山", category: "牛肉/跷脚牛肉"},
+            {rank: 39, name: "正一涵老味道（总店）", lng: 104.281505, lat: 30.980205, city: "德阳", category: "川菜"},
+            {rank: 40, name: "正南齐北重庆老火锅（东门市井直营店）", lng: 104.125003, lat: 30.618134, city: "成都", category: "火锅"},
+            {rank: 41, name: "鞠婆婆 •绵绵冰•凉糕 •手工冰粉（上中顺直营店）", lng: 103.76833, lat: 29.554175, city: "乐山", category: "乐山小吃/甜品"},
+            {rank: 42, name: "明婷饭店", lng: 104.08726, lat: 30.673283, city: "成都", category: "川菜"},
+            {rank: 43, name: "九妹凤爪（总店）", lng: 103.765626, lat: 29.556394, city: "乐山", category: "乐山小吃/凤爪"},
+            {rank: 44, name: "皇城老妈火锅（皇城店）", lng: 104.052475, lat: 30.621677, city: "成都", category: "火锅"},
+            {rank: 45, name: "蜀宴赋", lng: 104.123075, lat: 30.667574, city: "成都", category: "川菜"},
+            {rank: 46, name: "樽宴酒楼（育才·都市家园店）", lng: 104.103581, lat: 30.613021, city: "成都", category: "川菜"},
+            {rank: 47, name: "阿杜土菜馆 •江油肥肠（远太城店）", lng: 104.7402, lat: 31.771612, city: "绵阳", category: "肥肠/江油菜"},
+            {rank: 48, name: "蓉和妈妈菜•巴山蜀水", lng: 103.930468, lat: 30.582291, city: "成都", category: "川菜"},
+            {rank: 49, name: "御凤甲柴火鸡（华阳店）", lng: 104.040659, lat: 30.526142, city: "成都", category: "柴火鸡"},
+            {rank: 50, name: "谦和清心素食（五大花园店）", lng: 104.003551, lat: 30.645438, city: "成都", category: "素食"},
+            {rank: 51, name: "勇记干锅居（德阳店）", lng: 104.390144, lat: 31.123059, city: "德阳", category: "干锅"},
+            {rank: 52, name: "幔搅粥底火锅（玉林店）", lng: 104.054201, lat: 30.629509, city: "成都", category: "火锅"},
+            {rank: 53, name: "蒋干锅总店", lng: 104.556487, lat: 31.542779, city: "绵阳", category: "干锅"},
+            {rank: 54, name: "锦燚火锅", lng: 103.7425, lat: 29.556327, city: "乐山", category: "火锅"},
+            {rank: 55, name: "朗御烧烤（望平街店）", lng: 104.090939, lat: 30.655533, city: "成都", category: "烧烤"},
+            {rank: 56, name: "香肥婆饭铺（太古里店）", lng: 104.081598, lat: 30.650492, city: "成都", category: "川菜"},
+            {rank: 57, name: "马家跷脚牛肉（非物质文化遗产传承单位）", lng: 103.757665, lat: 29.58449, city: "乐山", category: "牛肉/跷脚牛肉"},
+            {rank: 58, name: "黑竹香鸡（西门店）", lng: 104.03704, lat: 30.68108, city: "成都", category: "鸡肉"},
+            {rank: 59, name: "李老三油炸串串香（总店）", lng: 103.71892, lat: 29.606565, city: "乐山", category: "乐山小吃/油炸串串"},
+            {rank: 60, name: "回水镇 •江湖川菜（太古里店）", lng: 104.089759, lat: 30.657726, city: "成都", category: "川菜"},
+            {rank: 61, name: "孙婆婆美蛙兔火锅（小关庙店）", lng: 104.087266, lat: 30.667415, city: "成都", category: "火锅"},
+            {rank: 62, name: "连山回锅肉创始人代木儿餐厅（总店）", lng: 104.401777, lat: 31.002984, city: "德阳", category: "川菜/回锅肉"},
+            {rank: 63, name: "眉州东坡（三苏祠店）", lng: 103.829354, lat: 30.042015, city: "眉山", category: "川菜"},
+            {rank: 64, name: "景小川妈妈菜", lng: 104.781551, lat: 31.435584, city: "绵阳", category: "川菜"},
+            {rank: 65, name: "老厨房妈妈菜（樟树路店）", lng: 105.099225, lat: 31.093875, city: "南充", category: "川菜"},
+            {rank: 66, name: "大院河 •仙鱼莊（三圣花乡）", lng: 104.157931, lat: 30.586313, city: "成都", category: "鱼/川菜"},
+            {rank: 67, name: "第忆味道牦牛肉汤锅•川菜", lng: 101.962242, lat: 30.045959, city: "甘孜", category: "牛肉/牦牛肉"},
+            {rank: 68, name: "大蓉和（一品天下旗舰店）", lng: 104.026123, lat: 30.693845, city: "成都", category: "川菜"},
+            {rank: 69, name: "六合居•院子餐厅（兰庭店）", lng: 103.986723, lat: 30.618526, city: "成都", category: "川菜"},
+            {rank: 70, name: "大快乐+潼关码头宜宾老饭馆（西区碧峰园店）", lng: 104.622133, lat: 28.747649, city: "宜宾", category: "川菜/宜宾菜"},
+            {rank: 71, name: "蜀龙火锅", lng: 106.664761, lat: 30.45212, city: "达州", category: "火锅"},
+            {rank: 72, name: "李小肠烧烤（建昌古城店）", lng: 102.271778, lat: 27.892067, city: "凉山", category: "烧烤"},
+            {rank: 73, name: "he’ s何师烧烤（太古里店）", lng: 104.084834, lat: 30.648991, city: "成都", category: "烧烤"},
+            {rank: 74, name: "青城甲", lng: 103.592837, lat: 30.91837, city: "都江堰", category: "川菜"},
+            {rank: 75, name: "成都面馆正反面总店", lng: 104.010299, lat: 30.664558, city: "成都", category: "面食"},
+            {rank: 76, name: "华阳串根香（洛水店）", lng: 104.055107, lat: 31.242259, city: "德阳", category: "串串香"},
+            {rank: 77, name: "彪彪烧鸭（总店）", lng: 104.292249, lat: 30.608232, city: "成都", category: "鸭肉"},
+            {rank: 78, name: "鹏鹏妈老火锅（宽窄巷子店）", lng: 104.049403, lat: 30.669748, city: "成都", category: "火锅"},
+            {rank: 79, name: "源麦甜·品质千层（成都川大店）", lng: 104.076405, lat: 30.625509, city: "成都", category: "甜品"},
+            {rank: 80, name: "老砂锅（城北店）", lng: 105.384336, lat: 30.876424, city: "南充", category: "砂锅"},
+            {rank: 81, name: "王府黄牛肉", lng: 102.618137, lat: 29.501406, city: "雅安", category: "牛肉"},
+            {rank: 82, name: "三毛鱼庄", lng: 104.639511, lat: 29.545749, city: "资阳", category: "鱼"},
+            {rank: 83, name: "嗨岛兔烤兔兔头四川特产（总店）", lng: 104.079013, lat: 30.658881, city: "成都", category: "兔肉/特产"},
+            {rank: 84, name: "豆相识•九九豆腐脑（乐山总店）", lng: 103.763206, lat: 29.560028, city: "乐山", category: "乐山小吃/豆腐脑"},
+            {rank: 85, name: "水碾河刘老大串串香（水碾河路店）", lng: 104.101388, lat: 30.647077, city: "成都", category: "串串香"},
+            {rank: 86, name: "朱三甜皮鸭（教育学院总店）", lng: 103.7622, lat: 29.579978, city: "乐山", category: "乐山小吃/甜皮鸭"},
+            {rank: 87, name: "宫廷糕点（文殊院总店）", lng: 104.074939, lat: 30.673295, city: "成都", category: "糕点"},
+            {rank: 88, name: "阿亲家.韩式无限烤肉（春熙路店）", lng: 104.074661, lat: 30.654657, city: "成都", category: "烤肉"},
+            {rank: 89, name: "稻小湘（状元府邸店）", lng: 104.703236, lat: 31.485918, city: "绵阳", category: "湘菜"},
+            {rank: 90, name: "明君凉面（黄金小区店）", lng: 105.851383, lat: 32.430931, city: "广元", category: "面食"},
+            {rank: 91, name: "湖亭柴味 •柴火鸡", lng: 105.499953, lat: 28.851274, city: "泸州", category: "柴火鸡"},
+            {rank: 92, name: "芋见张宜花园（盐边预告店）", lng: 101.858504, lat: 26.670204, city: "攀枝花", category: "甜品"},
+            {rank: 93, name: "味当家鱼头火锅（紫荆店）", lng: 104.048973, lat: 30.623491, city: "成都", category: "火锅"},
+            {rank: 94, name: "李静记卤肉小碗菜（邛崃名小吃）", lng: 103.45288, lat: 30.41589, city: "邛崃", category: "小吃/卤肉"},
+            {rank: 95, name: "乌苏烧烤•成都大排档宵夜城", lng: 104.081444, lat: 30.678393, city: "成都", category: "烧烤"},
+            {rank: 96, name: "冯校长老火锅（太古里总店）", lng: 104.080162, lat: 30.651716, city: "成都", category: "火锅"},
+            {rank: 97, name: "香港陈诚记茶餐厅（泰合青年城店）", lng: 106.097032, lat: 30.796172, city: "达州", category: "茶餐厅"},
+            {rank: 98, name: "煤炭坝.厕所兔（龙都广场店）", lng: 104.770725, lat: 29.357991, city: "自贡", category: "兔肉/自贡菜"},
+            {rank: 99, name: "应大厨", lng: 105.087314, lat: 31.090995, city: "南充", category: "川菜"},
+            {rank: 100, name: "马旺子（眉山店）", lng: 103.850076, lat: 30.044329, city: "眉山", category: "川菜"}
+        ];
+        
+        // 初始化地图
+        const map = L.map('map').setView([30.67, 104.06], 11);
+        
+        // 添加OpenStreetMap图层，移除版权信息
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '',
+            maxZoom: 18
+        }).addTo(map);
+        
+        // 隐藏leaflet的attribution控件
+        map.attributionControl.setPrefix(false);
+        map.attributionControl.remove();
+        
+        // 加载成都市边界GeoJSON
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/510100_full.json')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: '#c72c2c',
+                        weight: 3,
+                        opacity: 0.7,
+                        fillOpacity: 0.05
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.log('成都市边界数据加载失败，不影响主要功能');
+            });
+        
+        // 初始化统计信息
+        function updateStats() {
+            const chengduRestaurants = restaurantData.filter(r => r.city === "成都").length;
+            const otherRestaurants = restaurantData.length - chengduRestaurants;
+            
+            document.getElementById('chengdu-count').textContent = chengduRestaurants;
+            document.getElementById('other-count').textContent = otherRestaurants;
+        }
+        
+        // 创建自定义图标
+        function createCustomIcon(rank) {
+            let className = 'marker-icon ';
+            if (rank <= 10) {
+                className += 'top10';
+            } else if (rank <= 50) {
+                className += 'top50';
+            } else {
+                className += 'other';
+            }
+            
+            return L.divIcon({
+                html: `<div class="${className}">${rank}</div>`,
+                className: 'custom-marker',
+                iconSize: rank <= 10 ? [45, 45] : rank <= 50 ? [40, 40] : [35, 35],
+                iconAnchor: rank <= 10 ? [22, 22] : rank <= 50 ? [20, 20] : [17, 17]
+            });
+        }
+        
+        // 存储当前标记和显示数据
+        let currentMarkers = [];
+        let currentRestaurants = [...restaurantData];
+        let activeCategory = 'all';
+        let activeCity = 'all';
+        
+        // 渲染餐厅标记
+        function renderRestaurants(restaurants) {
+            // 清除现有标记
+            currentMarkers.forEach(marker => map.removeLayer(marker));
+            currentMarkers = [];
+            
+            // 为每个餐厅创建标记
+            restaurants.forEach(restaurant => {
+                const marker = L.marker([restaurant.lat, restaurant.lng], {
+                    icon: createCustomIcon(restaurant.rank)
+                });
+                
+                // 点击标记时显示浮动卡片，不显示Leaflet默认的popup
+                marker.on('click', function(e) {
+                    showFloatingCard(restaurant, e.latlng);
+                });
+                
+                // 鼠标悬停时高亮对应卡片
+                marker.on('mouseover', function() {
+                    highlightCard(restaurant.rank);
+                });
+                
+                marker.on('mouseout', function() {
+                    unhighlightCard(restaurant.rank);
+                });
+                
+                currentMarkers.push(marker);
+                marker.addTo(map);
+            });
+            
+            // 更新显示数量
+            document.getElementById('showing-count').textContent = restaurants.length;
+            
+            // 如果标记数量大于0，调整地图视图以显示所有标记
+            if (currentMarkers.length > 0) {
+                const group = L.featureGroup(currentMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+        
+        // 渲染TOP10餐厅卡片
+        function renderTop10() {
+            const top10Container = document.getElementById('top10-container');
+            top10Container.innerHTML = '';
+            
+            const top10 = restaurantData.slice(0, 10);
+            
+            top10.forEach(restaurant => {
+                const card = document.createElement('div');
+                card.className = 'restaurant-card highlight';
+                card.dataset.rank = restaurant.rank;
+                
+                card.innerHTML = `
+                    <div class="card-rank">${restaurant.rank}</div>
+                    <div class="card-title">${restaurant.name}</div>
+                    <div class="card-city ${restaurant.city === '成都' ? 'chengdu' : ''}">${restaurant.city}</div>
+                    <div class="card-category">
+                        <i class="fas fa-utensils"></i>
+                        <span>${restaurant.category}</span>
+                    </div>
+                `;
+                
+                // 点击卡片时定位到地图标记并显示浮动卡片
+                card.addEventListener('click', function() {
+                    const marker = currentMarkers.find(m => {
+                        const latLng = m.getLatLng();
+                        return Math.abs(latLng.lat - restaurant.lat) < 0.0001 && Math.abs(latLng.lng - restaurant.lng) < 0.0001;
+                    });
+                    
+                    if (marker) {
+                        map.setView([restaurant.lat, restaurant.lng], 14);
+                        marker.fire('click');
+                    }
+                });
+                
+                top10Container.appendChild(card);
+            });
+        }
+        
+        // 渲染分类标签
+        function renderCategories() {
+            const categoriesContainer = document.getElementById('categories-container');
+            categoriesContainer.innerHTML = '';
+            
+            // 提取所有分类
+            const categories = new Set();
+            restaurantData.forEach(restaurant => {
+                const cats = restaurant.category.split('/');
+                cats.forEach(cat => categories.add(cat.trim()));
+            });
+            
+            // 添加"全部"标签
+            const allTag = document.createElement('div');
+            allTag.className = 'category-tag active';
+            allTag.textContent = '全部菜系';
+            allTag.dataset.category = 'all';
+            allTag.addEventListener('click', function() {
+                document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
+                this.classList.add('active');
+                activeCategory = 'all';
+                filterRestaurants();
+            });
+            categoriesContainer.appendChild(allTag);
+            
+            // 添加其他分类标签（只显示前8个，避免占用太多空间）
+            const categoryArray = Array.from(categories).sort();
+            const displayCategories = categoryArray.slice(0, 8);
+            
+            displayCategories.forEach(category => {
+                const tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.textContent = category;
+                tag.dataset.category = category;
+                tag.addEventListener('click', function() {
+                    document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
+                    this.classList.add('active');
+                    activeCategory = category;
+                    filterRestaurants();
+                });
+                categoriesContainer.appendChild(tag);
+            });
+            
+            // 如果分类超过8个，添加"更多"标签
+            if (categoryArray.length > 8) {
+                const moreTag = document.createElement('div');
+                moreTag.className = 'category-tag';
+                moreTag.textContent = '更多...';
+                moreTag.title = '点击查看更多分类';
+                moreTag.addEventListener('click', function() {
+                    // 显示所有分类
+                    categoriesContainer.innerHTML = '';
+                    
+                    // 重新添加"全部"标签
+                    categoriesContainer.appendChild(allTag);
+                    
+                    // 添加所有分类标签
+                    categoryArray.forEach(category => {
+                        const tag = document.createElement('div');
+                        tag.className = 'category-tag';
+                        if (category === activeCategory) tag.classList.add('active');
+                        tag.textContent = category;
+                        tag.dataset.category = category;
+                        tag.addEventListener('click', function() {
+                            document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
+                            this.classList.add('active');
+                            activeCategory = category;
+                            filterRestaurants();
+                        });
+                        categoriesContainer.appendChild(tag);
+                    });
+                });
+                categoriesContainer.appendChild(moreTag);
+            }
+        }
+        
+        // 渲染餐厅列表
+        function renderRestaurantList(restaurants) {
+            const listContainer = document.getElementById('restaurant-list');
+            listContainer.innerHTML = '';
+            
+            // 显示全部餐厅
+            restaurants.forEach(restaurant => {
+                const item = document.createElement('div');
+                item.className = 'restaurant-item';
+                item.dataset.rank = restaurant.rank;
+                
+                item.innerHTML = `
+                    <div class="item-rank">${restaurant.rank}</div>
+                    <div class="item-details">
+                        <div class="item-name">${restaurant.name}</div>
+                        <div class="item-city">${restaurant.city} • ${restaurant.category}</div>
+                    </div>
+                `;
+                
+                // 点击列表项时定位到对应的地图标记并显示浮动卡片
+                item.addEventListener('click', function() {
+                    const marker = currentMarkers.find(m => {
+                        const latLng = m.getLatLng();
+                        return Math.abs(latLng.lat - restaurant.lat) < 0.0001 && Math.abs(latLng.lng - restaurant.lng) < 0.0001;
+                    });
+                    
+                    if (marker) {
+                        map.setView([restaurant.lat, restaurant.lng], 14);
+                        marker.fire('click');
+                    }
+                    
+                    highlightCard(restaurant.rank);
+                });
+                
+                listContainer.appendChild(item);
+            });
+        }
+        
+        // 筛选餐厅数据
+        function filterRestaurants() {
+            let filtered = [...restaurantData];
+            
+            // 按城市筛选
+            if (activeCity === '成都') {
+                filtered = filtered.filter(r => r.city === '成都');
+            } else if (activeCity === '其他') {
+                filtered = filtered.filter(r => r.city !== '成都');
+            }
+            
+            // 按分类筛选
+            if (activeCategory !== 'all') {
+                filtered = filtered.filter(r => r.category.includes(activeCategory));
+            }
+            
+            currentRestaurants = filtered;
+            renderRestaurants(filtered);
+            renderRestaurantList(filtered);
+        }
+        
+        // 高亮卡片
+        function highlightCard(rank) {
+            document.querySelectorAll('.restaurant-card').forEach(card => {
+                if (parseInt(card.dataset.rank) === rank) {
+                    card.classList.add('highlight');
+                }
+            });
+            
+            document.querySelectorAll('.restaurant-item').forEach(item => {
+                if (parseInt(item.dataset.rank) === rank) {
+                    item.style.backgroundColor = '#f8e4b7';
+                    item.style.borderLeftColor = '#c72c2c';
+                }
+            });
+        }
+        
+        // 取消高亮卡片
+        function unhighlightCard(rank) {
+            document.querySelectorAll('.restaurant-card').forEach(card => {
+                if (parseInt(card.dataset.rank) === rank) {
+                    card.classList.remove('highlight');
+                }
+            });
+            
+            document.querySelectorAll('.restaurant-item').forEach(item => {
+                if (parseInt(item.dataset.rank) === rank) {
+                    item.style.backgroundColor = '';
+                    item.style.borderLeftColor = '';
+                }
+            });
+        }
+        
+        // 显示浮动卡片
+        function showFloatingCard(restaurant, latlng) {
+            const card = document.getElementById('floating-card');
+            const cardTitle = document.getElementById('card-title');
+            const cardRank = document.getElementById('card-rank');
+            const cardCity = document.getElementById('card-city');
+            const cardCategory = document.getElementById('card-category');
+            const cardCoords = document.getElementById('card-coords');
+            
+            cardTitle.textContent = restaurant.name;
+            cardRank.textContent = restaurant.rank;
+            cardCity.textContent = restaurant.city;
+            cardCategory.textContent = restaurant.category;
+            cardCoords.textContent = `${restaurant.lng.toFixed(6)}, ${restaurant.lat.toFixed(6)}`;
+            
+            // 设置卡片位置
+            const point = map.latLngToContainerPoint(latlng);
+            const mapWidth = document.getElementById('map').offsetWidth;
+            const mapHeight = document.getElementById('map').offsetHeight;
+            
+            // 确保卡片不会超出地图边界
+            let left = point.x - 140;
+            let top = point.y - 160;
+            
+            if (left < 10) left = 10;
+            if (left + 280 > mapWidth) left = mapWidth - 290;
+            if (top < 10) top = 10;
+            if (top + 180 > mapHeight) top = mapHeight - 190;
+            
+            card.style.left = left + 'px';
+            card.style.top = top + 'px';
+            
+            card.classList.add('show');
+            
+            // 高亮对应卡片
+            highlightCard(restaurant.rank);
+        }
+        
+        // 关闭浮动卡片
+        document.querySelector('.close-card').addEventListener('click', function() {
+            document.getElementById('floating-card').classList.remove('show');
+        });
+        
+        // 初始化
+        updateStats();
+        renderRestaurants(restaurantData);
+        renderTop10();
+        renderCategories();
+        renderRestaurantList(restaurantData);
+        
+        // 添加地图缩放控制
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(map);
+        
+        // 添加比例尺
+        L.control.scale({
+            imperial: false,
+            position: 'bottomleft'
+        }).addTo(map);
+        
+        // 城市筛选按钮事件
+        document.querySelectorAll('.city-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeCity = this.dataset.city;
+                filterRestaurants();
+            });
+        });
+        
+        // 添加点击地图关闭卡片的事件
+        map.on('click', function() {
+            document.getElementById('floating-card').classList.remove('show');
+        });
+    </script>
+</body>
+</html>
